@@ -12,13 +12,13 @@ public class RxWebSocketEndpoint extends Endpoint implements ObservableOnSubscri
 	private ObservableEmitter<? super RxMessage> emitter;
 
 	public void defineFlow(final Session session, final Observable<RxMessage> root) {
+		//TODO: which flows exists?
 		root.doOnNext(rxMessage -> {rxMessage.getSession().getBasicRemote().sendText("angekommen!");})
 				.subscribe();
 	}
 
 	@Override
 	public void onOpen(final Session session, final EndpointConfig config) {
-		System.out.println("OnOpen called!");
 		defineFlow(session, Observable.create(this));
 		session.addMessageHandler(new Handler(this, session));
 	}
