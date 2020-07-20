@@ -34,7 +34,7 @@ public class RxWebSocketEndpoint extends Endpoint implements ObservableOnSubscri
 		emitter.onError(throwable);
 	}
 
-	public void subscribe(@NonNull ObservableEmitter emitter) throws Throwable {
+	public void subscribe(@NonNull ObservableEmitter emitter) {
 		this.emitter = emitter;
 	}
 
