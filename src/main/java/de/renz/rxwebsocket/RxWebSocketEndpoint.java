@@ -14,12 +14,9 @@ public class RxWebSocketEndpoint extends Endpoint implements ObservableOnSubscri
 
 	public void defineFlow(final Session session, final Observable<RxMessage> root) {
 		root.doOnSubscribe(disposable -> {WorkflowSteps.addPlayer(session.getId());})
-				.doOnNext(rxMessage -> {
-					if (rxMessage.getMessage().equals(WorkflowSteps.getStep(session.getId())))
-						WorkflowSteps.setStepCompleted(session.getId());
-				})
-				.doOnNext(rxMessage -> {rxMessage.send(Integer.toString(WorkflowSteps.getStep(session.getId())));})
-				.doOnError(e -> {System.out.println("Fehler: " + e.getMessage());})
+				.doOnNext(rxMessage -> {WorkflowSteps.setStepCompleted(session.getId());})
+				.doOnNext(rxMessage -> rxMessage.send(Integer.toString(WorkflowSteps.getStep(session.getId()))))
+				.doOnError(e -> {session.getBasicRemote().sendText(Integer.toString(WorkflowSteps.getStep(session.getId())));})
 				.subscribe();
 	}
 
@@ -31,18 +28,15 @@ public class RxWebSocketEndpoint extends Endpoint implements ObservableOnSubscri
 
 	@Override
 	public void onClose(final Session session, final CloseReason closeReason) {
-
 		emitter.onComplete();
 	}
 
 	@Override
 	public void onError(final Session session, final Throwable throwable) {
-
 		emitter.onError(throwable);
 	}
 
 	public void subscribe(@NonNull ObservableEmitter emitter) {
-
 		this.emitter = emitter;
 	}
 
@@ -57,7 +51,14 @@ public class RxWebSocketEndpoint extends Endpoint implements ObservableOnSubscri
 
 		@Override
 		public void onMessage(final String message) {
-			this.parent.emitter.onNext(new RxMessage(session, message));
+			if(message.contains("Completed")){
+				this.parent.emitter.onNext(new RxMessage(session, message));
+			} else if(message.contains("Failure")){
+				this.parent.emitter.onError(new RuntimeException("Failure in workflowstep for session" + session.getId()));
+			} else if(message.contains(Integer.toString(WorkflowSteps.STEP_READY))){
+				this.parent.emitter.onComplete();
+			}
+
 		}
 	}
 }

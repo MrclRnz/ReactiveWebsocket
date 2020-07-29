@@ -1,13 +1,13 @@
 package de.renz.rxwebsocket.shared;
 
-import com.sun.corba.se.spi.orbutil.threadpool.Work;
-
 import javax.websocket.*;
 import java.io.IOException;
 import java.net.URI;
 
-public class RxWebSocketClient {
+public abstract class RxWebSocketClient {
 	public Session session;
+
+	public abstract void defineFlow(String message);
 
 	public RxWebSocketClient(final String uri) {
 		try {
@@ -37,7 +37,7 @@ public class RxWebSocketClient {
 
 	@OnMessage
 	public void onMessage(String message) {
-		System.out.println(message);
+		defineFlow(message);
 	}
 
 	public Session getSession() {
